@@ -1,0 +1,22 @@
+{
+  "name": "ch4",
+  "version": "1.0.0",
+  "description": "chapter 4",
+  "main": "index.js",
+  "scripts": {
+    "start": "pm2 start 3.15.js -n testServer",
+    "stop": "pm2 stop testServer",
+    "delete": "pm2 delete testServer"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/uowol"
+  },
+  "author": "uowol",
+  "license": "ISC",
+  "dependencies": {
+    "cookie-parser": "^1.4.5",
+    "express": "^4.17.1",
+    "morgan": "^1.10.0"
+  }
+}

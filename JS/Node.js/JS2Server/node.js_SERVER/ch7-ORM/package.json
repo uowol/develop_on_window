@@ -1,0 +1,15 @@
+{
+  "name": "ch7-orm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "7.1.sequelize.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mysql2": "^2.2.5",
+    "sequelize": "^6.3.5"
+  }
+}

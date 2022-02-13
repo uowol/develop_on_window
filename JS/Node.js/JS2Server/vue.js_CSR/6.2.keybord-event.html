@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이벤트</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+<body>
+
+    <div id="start">
+        <!-- v-on => @ 으로 대체 가능 -->
+        <input type="text" @keyup="key">
+        <!-- many variations: key.XXXX -->
+        <!-- enter, tab, delete, esc, space, ctrl, alt. shift, meta(window 키) ... -->
+    </div>
+
+    <script>
+        let app = new Vue({
+            el: "#start",
+            data() {
+                return {
+                    value: 1
+                }
+            },
+            methods: {
+                key: (e) => {
+                    e.preventDefault()
+                    console.log(e)
+                }
+            }
+        })
+    </script>
+
+</body>
+</html>

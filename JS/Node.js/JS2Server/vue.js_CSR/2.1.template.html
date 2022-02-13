@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+<body>
+    <div id="start">
+        <!-- <a v-bind:href="link1">페이지 이동</a>
+        <img v-bind:src="src1" alt=""> -->
+        <a :href="link1">페이지 이동</a>
+        <img :src="src1" alt="">
+    </div>
+    <script>
+        let app = new Vue({
+            el: "#start",
+            // data: {
+            //     message: '!!!hello world!!!'
+            // }
+            data() {
+                return {
+                    link1: "https://e1.pngegg.com/pngimages/995/641/png-clipart-01-pokemon-pikachu-illustration.png",
+                    src1: "https://e1.pngegg.com/pngimages/995/641/png-clipart-01-pokemon-pikachu-illustration.png"
+                }
+            }
+        })
+    </script>
+</body>
+</html>

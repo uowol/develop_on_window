@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idea Bulb</title>
+    <style>
+        *{
+            box-sizing: border-box;
+        }
+        body, html{
+            padding: 0;
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+        .container{
+            display: flex;            
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .box{
+            width: 500px;
+            height: 500px;
+            background-color: #eee;
+            position: relative;
+        }
+        .dummy{
+            width: 50px;
+            height: 50px;
+            background-color: #666;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="box" id="box">
+            <div class="dummy" id="dum1"></div>
+        </div>
+    </div>
+    <script>
+        class Vector{
+            constructor(x, y){
+                this.x = x
+                this.y = y
+            }
+            add(v){
+                this.x += v.x
+                this.y += v.y
+                return this
+            }
+            mult(s){
+                this.x *= s
+                this.y *= s
+                return this
+            }
+            get weight(){
+                return Math.sqrt(this.x**2 + this.y**2)
+            }
+            normalize(){
+                let w = this.weight
+                this.x /= w
+                this.y /= w
+            }
+        }
+
+        class Bulb{
+            constructor(position){
+                this.position = position
+                this.velocity = new Vector(0, 0)
+                this.accelerator = new Vector(0, 0)
+            }
+        }
+
+        const show = (position)=>{
+            dum1.style.left = position.x + 'px'
+            dum1.style.top = position.y + 'px'
+        }
+
+        let unit = .0001
+        let position = new Vector(Math.random()*450, 0)
+        let velocity = new Vector(5000*unit, 0)
+        let accelerator = new Vector(0, 10 * unit * (500-position.y)/50)
+
+        dum1.style.left = position.x + 'px'
+        dum1.style.top = position.y + 'px'
+
+        let loop = setInterval(()=>{
+            velocity.add(accelerator)                
+            position.add(velocity)
+            if(position.x <= 0 ){
+                velocity.x *= -1
+            }
+            if(position.x >= 450 ){
+                velocity.x *= -1
+            }
+            if(position.y >= 450){
+                position.y = 450
+                velocity.x *= .8
+                velocity.y *= -.9
+            }
+            show(position)
+        }, .01)
+    </script>
+</body>
+</html>

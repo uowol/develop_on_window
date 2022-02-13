@@ -1,0 +1,1 @@
+https://kr.api.riotgames.com/lol/league-exp/v4/entries/RANKED_SOLO_5x5/BRONZE/I?api_key=RGAPI-d5473ba7-020f-4590-9003-ad2ca0a0aff7&page=1

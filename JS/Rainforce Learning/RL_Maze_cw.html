@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        *{
+            box-sizing: border-box;
+        }
+        body, html{
+            width: 100vw;
+            height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+        canvas{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid #2e2e2e;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas_background" width="600" height="400"></canvas>
+    <canvas id="canvas" width="600" height="400"></canvas>
+
+    <script>
+        let learningRate=1.0, discount=0.9, t=0
+        
+        const ctx = canvas.getContext('2d');
+        const ctxBg = canvas_background.getContext('2d');
+        const floor = Math.floor;
+        let size = 50;
+        let wNum = 9
+        let hNum = 9
+        let boxWidth = size * wNum;
+        let boxHeight = size * hNum;
+        canvas_background.width = canvas.width = boxWidth;
+        canvas_background.height = canvas.height = boxHeight;
+        let islearning = false
+        let iscomplete = false
+        let endPoint = [-1, -1]
+        let startPoint = [-1, -1]
+        let now = [-1, -1]
+
+        const map = new Array(floor(boxHeight/size));
+        const weight = new Array(floor(boxHeight/size))
+
+        const init = () => {
+            for(let i=0; i<map.length; i++){
+                map[i] = new Array(floor(boxWidth/size)).fill(0);
+                weight[i] = new Array(floor(boxWidth/size))
+            }
+            for(let i = 0; i<weight.length;i++){
+                for(let j = 0;j<weight[i].length;j++){
+                    weight[i][j]=new Array(4).fill(0)
+                }
+            }
+
+            for(let i = 0; i < floor(boxHeight/size); i++){
+                for(let j = 0; j < floor(boxWidth/size); j++){
+                    ctxBg.strokeRect(j*size, i*size, size, size);
+                }
+            }
+        }
+
+        const getReward = (x, y) => {
+            if(map[y][x] == 2){
+                return -1
+            }
+            if(map[y][x] == 3){
+                return +1
+            }
+            return 0
+        }
+
+        const isWall = (x, y) => y < 0 || y >= hNum || x < 0 || x >= wNum || map[y][x] == 1 ? true : false;
+
+        const updateQvalue = (px, py, ax, ay, a) => {
+            let [x, y] = [px+ax, py+ay]
+            let r = getReward(x, y)
+            weight[py][px][a] = (1-learningRate)*weight[py][px][a] + learningRate*(r + discount*Math.max(...weight[y][x])) 
+            console.log(`${px}, ${py}, ${a} => ${weight[py][px][a]}`)
+            return r
+        }
+
+        const registerEvents = () => {
+            canvas.addEventListener('click', e => {
+                if(islearning) return false;
+
+                let {offsetX: rx, offsetY: ry} = e;
+                let [x, y] = [floor(rx/size), floor(ry/size)];
+
+                if(x == startPoint[0] && y == startPoint[1]) return false;
+
+                let value = ++map[y][x] % 4;
+                if(value == 0){ // none
+                    ctx.clearRect(x*size, y*size, size, size);
+                    return true;
+                }
+                if(value == 1){//wall
+                    ctx.fillStyle = '#ccc';
+                    ctx.fillRect(x*size, y*size, size, size);
+                    return true;
+                }
+                if(value == 2){ //-1 point
+                    ctx.fillStyle = 'red';
+                    ctx.fillRect(x*size, y*size, size, size);
+                    return true;
+                }
+                if(value == 3){//+1 point
+                    if (endPoint.reduce((prev, cur) => prev + cur) != -2){
+                        let [px, py] = endPoint;
+                        map[py][px] = 0;
+                        ctx.clearRect(px*size, py*size, size, size);
+                    }
+                    endPoint = [x, y];
+                    ctx.fillStyle = 'green';
+                    ctx.fillRect(x*size, y*size, size, size);
+                    return true;
+                }
+            });
+            canvas.addEventListener('contextmenu', e => {
+                if(islearning) return false;
+
+                let {offsetX: rx, offsetY: ry} = e;
+                let [x, y] = [floor(rx/size), floor(ry/size)];
+                map[y][x] = 4;
+                if (startPoint.reduce((prev, cur) => prev + cur) != -2){
+                    let [px, py] = startPoint;
+                    map[py][px] = 0;
+                    ctx.clearRect(px*size, py*size, size, size);
+                }
+                startPoint = [x, y];
+                ctx.fillStyle = 'blue';
+                ctx.fillRect(x*size, y*size, size, size);
+                return false
+            })
+            document.body.addEventListener('keydown', ({keyCode}) => {
+                if(!islearning) return false;
+                let key = keyCode % 37;
+                let [x, y] = now
+                ctx.clearRect(x*size, y*size, size, size)
+                switch(key){
+                    case 0: // left
+                        if(isWall(x-1, y)) break
+                        if(updateQvalue(x--, y, -1, 0, key)){
+                            [x, y] = startPoint;
+                            if(Math.max(...weight[y][x]) != 0){
+                                alert('학습이 완료되었습니다. start()를 실행할 수 있습니다.')
+                                iscomplete = true
+                            }
+                        }
+                        break
+                    case 1: // top
+                        if(isWall(x, y-1)) break
+                        if(updateQvalue(x, y--, 0, -1, key)){
+                            [x, y] = startPoint;
+                            if(Math.max(...weight[y][x]) != 0){
+                                alert('학습이 완료되었습니다. start()를 실행할 수 있습니다.')
+                                iscomplete = true
+
+                            }
+                        }
+                        break
+                    case 2: // right
+                        if(isWall(x+1, y)) break
+                        if(updateQvalue(x++, y, +1, 0, key)){
+                            [x, y] = startPoint;
+                            if(Math.max(...weight[y][x]) != 0){
+                                alert('학습이 완료되었습니다. start()를 실행할 수 있습니다.')
+                                iscomplete = true
+
+                            }
+                        }
+                        break
+                    case 3: // bottom
+                        if(isWall(x, y+1)) break
+                        if(updateQvalue(x, y++, 0, +1, key)){
+                            [x, y] = startPoint;
+                            if(Math.max(...weight[y][x]) != 0){
+                                alert('학습이 완료되었습니다. start()를 실행할 수 있습니다.')
+                                iscomplete = true
+
+                            }
+                        }
+                        break
+                }
+                ctx.fillRect(x*size, y*size, size, size)
+                now = [x, y]
+            })
+        }
+        const learn = () => {
+            ctx.fillStyle = 'blue'
+            now = startPoint;
+            islearning = true
+
+        }
+
+        const start = () => {
+            if(!iscomplete) {
+                alert("학습이 완료되지 않았습니다. learn()을 먼저 실행해주세요.")
+                return false;
+            }
+
+            ctx.clearRect(now[0]*size, now[1]*size, size, size);
+            now = startPoint;
+            let before = null;
+            let move = setInterval(()=>{
+                if(now[0] == endPoint[0] && now[1] == endPoint[1]){
+                    clearInterval(move)
+                }
+                let [x, y] = now
+                if(before) ctx.clearRect(before[0]*size, before[1]*size, size, size)
+                ctx.fillRect(x*size, y*size, size, size)
+                let action = weight[y][x].indexOf(Math.max(...weight[y][x]))
+                if(action == 0){
+                    x--
+                }else if(action == 1){
+                    y--
+                }else if(action == 2){
+                    x++
+                }else if(action == 3){
+                    y++
+                }
+                before = [now[0], now[1]]
+                now = [x, y]
+            }, 600)
+        }
+        
+        init();
+        registerEvents();
+
+        
+    </script>
+</body>
+</html>

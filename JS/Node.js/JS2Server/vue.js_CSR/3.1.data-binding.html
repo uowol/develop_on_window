@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+<body>
+
+    <div id="start">
+        <input type="text" name="" v-model:value="text">
+        <h1>{{text}}</h1>
+        
+        <hr><br>
+
+        <select v-model="select" name="" id="">
+            <option value="" disabled>옵션 중 하나를 선택해주세요.</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+        <h1>선택함: {{select}}</h1>
+
+        <hr><br>
+
+        <div>
+            <input type="checkbox" value="1" v-model = "checks">
+            <label for="">1</label>
+            <input type="checkbox" value="2" v-model = "checks">
+            <label for="">2</label>
+            <input type="checkbox" value="3" v-model = "checks">
+            <label for="">3</label>
+            <br>
+            <h1>체크리스트: {{checks}}</h1>
+        </div>
+
+        
+    </div>
+
+    <script>
+        let app = new Vue({
+            el: "#start",
+            data() {
+                return {
+                    text: 'hello world!',
+                    select: '',
+                    checks:[]
+                }
+            }
+        })
+    </script>
+
+</body>
+</html>

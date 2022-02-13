@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>랜더링 중요해!</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+<body>
+
+    <div id="start">
+        <ul>
+            <li v-for="(data, idx) in calcDataSet">{{ idx }} : {{ data.t }}</li>
+        </ul>
+    </div>
+
+    <script>
+        let app = new Vue({
+            el: "#start",
+            data() {
+                return {
+                    dataSet: [
+                        {t: 1},
+                        {t: 2},
+                        {t: 3},
+                        {t: 4}
+                    ]
+                }
+            },
+            computed: {
+                calcDataSet: function(){
+                    // fast: !(n%2) > n%2==0
+                    return this.dataSet.filter(v => !(v.t%2))
+                }
+            }
+        })
+    </script>
+
+</body>
+</html>

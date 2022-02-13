@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>계산된 속성</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+<body>
+
+    <div id="start">
+        <input type="text" v-model:value='value'>
+        <h1>{{sum}}</h1>
+    </div>
+
+    <script>
+        let app = new Vue({
+            el: "#start",
+            data() {
+                return {
+                    value: 1,
+                    sum: 1
+                }
+            },
+            watch: {
+                value: function(d) { 
+                    console.log(d, isNaN(parseInt(d)))
+                    if(!isNaN(parseInt(d))){
+                        this.sum += parseInt(d)
+                    }
+                    this.value = 0
+                }
+            }
+        })
+    </script>
+
+</body>
+</html>

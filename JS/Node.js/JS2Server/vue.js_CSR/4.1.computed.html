@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>계산된 속성</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+<body>
+
+    <div id="start">
+        <h1>{{calcDate}}</h1>
+        <h1>{{calcDate}}</h1>
+        <h1>{{calcDate}}</h1>
+    </div>
+
+    <script>
+        let app = new Vue({
+            el: "#start",
+            data() {
+                return {
+                    date: new Date()
+                }
+            },
+            // 이미 계산된 값이 바뀌지 않는다면 캐싱되어 사용. 즉 같은 값이면 계산하지 않음.
+            computed: {
+                calcDate: function() { 
+                    return `${this.date.getFullYear()} - ${parseInt(this.date.getMonth()) + 1} - ${this.date.getDate()}`
+                }
+            }
+        })
+    </script>
+
+</body>
+</html>

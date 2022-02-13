@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이벤트</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+<body>
+
+    <div id="start">
+        <form @submit.prevent="submit">
+            <button type="submit" name="button">제출</button>
+        </form>
+    </div>
+
+    <script>
+        let app = new Vue({
+            el: "#start",
+            data() {
+                return {
+
+                }
+            },
+            methods: {
+                submit: (e) => {
+                    // e.preventDefault() // 또는 체이닝(@submit.XXX)으로 설정 가능
+                    console.log(e)
+                }
+            }
+        })
+    </script>
+
+</body>
+</html>
