@@ -13,6 +13,14 @@ MCI_PLAY_PARMS playBgm;
 MCI_OPEN_PARMS openSounds[9];
 MCI_PLAY_PARMS playSounds[9];
 
+HANDLE hStdin;          // 기본 입출력 이벤트를 처리할 핸들
+DWORD fdwSaveOldMode;   // 이전 Console mode를 저장, 프로그램 종료 또는 오류 발생시 복구
+
+VOID ErrorExit(LPSTR);
+VOID KeyEventProc(KEY_EVENT_RECORD);
+VOID MouseEventProc(MOUSE_EVENT_RECORD);
+VOID ResizeEventProc(WINDOW_BUFFER_SIZE_RECORD);
+
 // Define path
 #define BGM         "Assets\\airplane.mp3"
 
@@ -65,8 +73,36 @@ struct Note{
 
 int g_tIndex;
 int g_ipt[9] = {0,};
+HANDLE hThread[20] = {0,};
 HANDLE hMutex;
 HANDLE iptMutex;
+const struct Note score[25] = {
+    {3, 3},
+    {1, 2},
+    {2, 1},
+    {2, 2},
+    {2, 3},
+    {2, 3},
+    {4, 3},
+    {2, 2},
+    {2, 2},
+    {4, 2},
+    {2, 3},
+    {2, 3},
+    {4, 3},
+    {3, 3},
+    {1, 2},
+    {2, 1},
+    {2, 2},
+    {2, 3},
+    {2, 3},
+    {4, 3},
+    {2, 2},
+    {2, 2},
+    {2, 3},
+    {2, 2},
+    {8, 1}
+};
 
 void gotoxy(int x, int y){
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -93,7 +129,7 @@ void soundInit(){
 
 // 수정 필요
 unsigned int __stdcall effectNote(PVOID pvParam) {
-    int key = *(int*) pvParam - 49;
+    int key = *(int*) pvParam;
 
     // create effect
     gotoxy(COORDS_NUM[key][0]-3, COORDS_NUM[key][1]);
@@ -140,35 +176,13 @@ unsigned int __stdcall effectNote(PVOID pvParam) {
     // reset cursor
     gotoxy(0, 13);
     
-    WaitForSingleObject(hMutex, INFINITE);
-    g_tIndex--;
-    ReleaseMutex(hMutex);
-}
-
-unsigned int __stdcall effectInput(PVOID pvParam) {
-    int key = *(int*) pvParam - 49;
-    
-    // effect
-    gotoxy(COORDS_NUM[key][0], COORDS_NUM[key][1]+1);
-    printf("-");
-
-    Sleep(100); //효과음이 재생될 때까지 정지했다가
-
-    // effect 소멸
-    gotoxy(COORDS_NUM[key][0], COORDS_NUM[key][1]+1);
-    printf(" ");
-
-    // reset cursor
-    gotoxy(0, 13);
-
-    // thread 소멸
     WaitForSingleObject(hMutex, INFINITE);
     g_tIndex--;
     ReleaseMutex(hMutex);
 }
 
 unsigned int __stdcall playingSound(PVOID pvParam) {
-    int key = *(int*) pvParam - 49;
+    int key = *(int*) pvParam;
     int dwID;
 
     mciSendCommand(0, MCI_OPEN, MCI_OPEN_ELEMENT | MCI_OPEN_TYPE, (DWORD)(LPVOID)&openSounds[key]);
@@ -184,23 +198,23 @@ unsigned int __stdcall playingSound(PVOID pvParam) {
     ReleaseMutex(hMutex);
 }
 
-unsigned int __stdcall inputNote(PVOID pvParam) {
-    int key = *(int *)pvParam - 49;
+// unsigned int __stdcall inputNote(PVOID pvParam) {
+//     int key = *(int *)pvParam;
     
-    WaitForSingleObject(iptMutex, INFINITE);
-    g_ipt[key] = 1;
-    ReleaseMutex(iptMutex);
+//     WaitForSingleObject(iptMutex, INFINITE);
+//     g_ipt[key] = 1;
+//     ReleaseMutex(iptMutex);
     
-    Sleep(500);
+//     Sleep(500);
     
-    WaitForSingleObject(iptMutex, INFINITE);
-    g_ipt[key] = 0;
-    ReleaseMutex(iptMutex);
+//     WaitForSingleObject(iptMutex, INFINITE);
+//     g_ipt[key] = 0;
+//     ReleaseMutex(iptMutex);
 
-    WaitForSingleObject(hMutex, INFINITE);
-    g_tIndex--;
-    ReleaseMutex(hMutex);
-}
+//     WaitForSingleObject(hMutex, INFINITE);
+//     g_tIndex--;
+//     ReleaseMutex(hMutex);
+// }
 
 unsigned int __stdcall startNote(struct Note score[]) {
     Sleep(5000);
@@ -322,8 +336,8 @@ void display(){
 
 int main(){
     // Thread ID를 받아 옵니다.
-    DWORD dwThreadID;
-    HANDLE hThread[20] = {0,};
+    DWORD dwThreadID, cNumRead, fdwMode, i;
+    INPUT_RECORD irInBuf[128];
     g_tIndex = 0;
     hMutex = CreateMutex(NULL, FALSE, NULL);
     iptMutex = CreateMutex(NULL, FALSE, NULL);
@@ -332,62 +346,113 @@ int main(){
 
     display();
 
-    const struct Note score[25] = {
-        {3, 3},
-        {1, 2},
-        {2, 1},
-        {2, 2},
-        {2, 3},
-        {2, 3},
-        {4, 3},
-        {2, 2},
-        {2, 2},
-        {4, 2},
-        {2, 3},
-        {2, 3},
-        {4, 3},
-        {3, 3},
-        {1, 2},
-        {2, 1},
-        {2, 2},
-        {2, 3},
-        {2, 3},
-        {4, 3},
-        {2, 2},
-        {2, 2},
-        {2, 3},
-        {2, 2},
-        {8, 1}
-    };
-
     playingBgm();
     
     WaitForSingleObject(hMutex, INFINITE);
     hThread[g_tIndex++] = (HANDLE)_beginthreadex(NULL, 0, startNote, score, 0, (unsigned*)&dwThreadID);
     ReleaseMutex(hMutex);
 
-    int key = 0;
-    while(1){
-        key = _getch();
-        if(key < KEY_ONE || key > KEY_NINE) break;
+    int counter = 0;
 
-        // Thread에 전달할 매개 변수입니다.
-        int dwArg = key;
-        if(g_tIndex >= 10) continue;
-        WaitForSingleObject(hMutex, INFINITE);
-        // printf("index: %d\n", g_tIndex);
-        hThread[g_tIndex++] = (HANDLE)_beginthreadex(NULL, 0, playingSound, (PVOID)&dwArg, 0, (unsigned*)&dwThreadID);
-        hThread[g_tIndex++] = (HANDLE)_beginthreadex(NULL, 0, inputNote, (PVOID)&dwArg, 0, (unsigned*)&dwThreadID);
-        hThread[g_tIndex++] = (HANDLE)_beginthreadex(NULL, 0, effectNote, (PVOID)&dwArg, 0, (unsigned*)&dwThreadID);
-        ReleaseMutex(hMutex);
-        if (key == KEY_DOWN){
-            break;
+    // Get the standard input handle;
+    hStdin = GetStdHandle(STD_INPUT_HANDLE);
+    if (hStdin == INVALID_HANDLE_VALUE) 
+        ErrorExit("GetStdHandle");
+
+    // Save the current input mode, to be restored on exit.
+    if (! GetConsoleMode(hStdin, &fdwSaveOldMode) )
+        ErrorExit("GetConsoleMode");
+
+    // Enable the window and mouse input events.
+    fdwMode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT; // 키보드는 default?    // 마우스는 작동하지 않음.
+    if (! SetConsoleMode(hStdin, fdwMode) )             // fdwMode에 있는 정보를 핸들에 입력
+        ErrorExit("SetConsoleMode");
+
+    // Start input
+    while(counter++ <= 1000){
+         // Wait for the events.
+        if (! ReadConsoleInput(
+                hStdin,      // input buffer handle
+                irInBuf,     // buffer to read into
+                128,         // size of read buffer
+                &cNumRead) ) // number of records read
+            ErrorExit("ReadConsoleInput");
+
+        // Dispatch the events to the appropriate handler.
+        for (i = 0; i < cNumRead; i++){
+            switch(irInBuf[i].EventType){
+                case KEY_EVENT: // keyboard input
+                    KeyEventProc(irInBuf[i].Event.KeyEvent);
+                    break;
+                case MOUSE_EVENT:               // disregard focus events
+                case WINDOW_BUFFER_SIZE_EVENT:  // disregard menu events
+                case FOCUS_EVENT:               // disregard focus events
+                case MENU_EVENT:                // disregard menu events
+                    break;
+                default:
+                    ErrorExit("Unknown event type");
+                    break;
+            }
         }
-        Sleep(10);
     }
+
     WaitForMultipleObjects(10, hThread, TRUE, 1000000);
     for(int i=0;i<10;i++)
         if (hThread[i] != NULL) CloseHandle(hThread[i]);
 
+    // Restore input mode on exit.
+    SetConsoleMode(hStdin, fdwSaveOldMode);
+
     return 0;
+}
+
+VOID ErrorExit (LPSTR lpszMessage){
+    fprintf(stderr, "%s\n", lpszMessage);   // !
+
+    // Restore input mode on exit.
+    SetConsoleMode(hStdin, fdwSaveOldMode);
+
+    Sleep(10000);
+
+    ExitProcess(0);     // !
+}
+
+VOID KeyEventProc(KEY_EVENT_RECORD ker){
+    DWORD dwThreadID;
+    // printf("Key event: ");
+    if(ker.bKeyDown){
+        // printf("key pressed : %d\n", ker.wVirtualKeyCode);
+        int num = ker.wVirtualKeyCode - 97;
+        if(num < 0 || num >= 9) return;
+
+        WaitForSingleObject(iptMutex, INFINITE);
+        if(g_ipt[num]) return;
+        g_ipt[num] = 1;
+        ReleaseMutex(iptMutex);
+
+        // effect
+        gotoxy(COORDS_NUM[num][0], COORDS_NUM[num][1]+1);
+        printf("-");
+
+        int dwArg = num;
+        if(g_tIndex >= 20) return;
+        WaitForSingleObject(hMutex, INFINITE);
+        hThread[g_tIndex++] = (HANDLE)_beginthreadex(NULL, 0, playingSound, (PVOID)&dwArg, 0, (unsigned*)&dwThreadID);
+        // hThread[g_tIndex++] = (HANDLE)_beginthreadex(NULL, 0, effectNote, (PVOID)&dwArg, 0, (unsigned*)&dwThreadID);
+        ReleaseMutex(hMutex);
+
+        // Sleep(10);
+    } else {
+        // printf("key released\n");
+        int num = ker.wVirtualKeyCode - 97;
+        if(num < 0 || num >= 9) return;
+
+        // effect 소멸
+        gotoxy(COORDS_NUM[num][0], COORDS_NUM[num][1]+1);
+        printf(" ");
+
+        WaitForSingleObject(iptMutex, INFINITE);
+        g_ipt[num] = 0;
+        ReleaseMutex(iptMutex);
+    }
 }

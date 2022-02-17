@@ -17,6 +17,8 @@ void gotoxy(int x, int y){
     SetConsoleCursorPosition(hConsole, pos);
 }
 
+int g_ipt[9] = {0,};
+
 int main(){
     DWORD cNumRead, fdwMode, i;
     INPUT_RECORD irInBuf[128];
@@ -91,15 +93,18 @@ VOID KeyEventProc(KEY_EVENT_RECORD ker){
     // printf("Key event: ");
 
     if(ker.bKeyDown){
-        // printf("key pressed : %d\n", ker.wVirtualKeyCode);
         int num = ker.wVirtualKeyCode - 96;
         if(num < 0 || num > 9) return;
+        if(g_ipt[num]) return;
+        // printf("key pressed : %d\n", ker.wVirtualKeyCode);
+        g_ipt[num] = 1;
         gotoxy(2*num + 2, 1);
         printf("1");
     } else {
-        // printf("key released\n");
         int num = ker.wVirtualKeyCode - 96;
         if(num < 0 || num > 9) return;
+        // printf("key released\n");
+        g_ipt[num] = 0;
         gotoxy(2*num + 2, 1);
         printf("0");
     }
