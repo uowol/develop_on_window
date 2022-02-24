@@ -1,0 +1,10 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskLabel": "task-Main copy",
+      "appliesTo": "C/Application/BGMandInputSound/Main copy.c",
+      "type": "launch"
+    }
+  ]
+}
